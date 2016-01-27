@@ -38,7 +38,7 @@ log = logging.getLogger("QueMail")
 class QueMail(Thread):
     instance = None
 
-    def init(self, smtp_host, smtp_login, smtp_pswd, smtp_port = 25, queue_size = 100):
+    def init(self, smtp_host, smtp_login, smtp_pswd, smtp_port = 25, use_tls = False, queue_size = 100):
         self._queue = Queue(queue_size)
         log.info("Initializing QueMail with queue size %i. Using SMTP server: %s:%i." % (queue_size, smtp_host, smtp_port))
         self.smtp_host = smtp_host
@@ -54,6 +54,7 @@ class QueMail(Thread):
         self.smtp_login = None
         self.smtp_password = None
         self.smtp_port = None
+        self.use_tls = False
         self.check_interval = 5          # the number of seconds to check the queue
 
     def end(self):
@@ -73,6 +74,9 @@ class QueMail(Thread):
                 try:
                     smtp = smtplib.SMTP()
                     smtp.connect(self.smtp_host, self.smtp_port)
+                    if self.use_tls:
+                        smtp.starttls()
+                        smtp.ehlo()
                     smtp.login(self.smtp_login, self.smtp_password)
     
                     while not self._queue.empty():
